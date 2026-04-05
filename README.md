@@ -38,15 +38,26 @@ cp .env.example .env
 # Edit .env with your settings
 ```
 
-4. **Start the bot**
+4. **Configure your phone number** *(optional but recommended)*
+
+Open your `.env` file and set your WhatsApp number (international format, no `+`):
+```env
+PHONE_NUMBER=212612345678
+```
+If left empty, the bot will ask for it at startup.
+
+5. **Start the bot**
 ```bash
 npm start
 ```
 
-5. **Scan QR Code**
-- A QR code will appear in the terminal
-- Scan it with WhatsApp on your phone
-- Bot will connect automatically
+6. **Connect via Pairing Code** *(replaces QR code)*
+- A **8-character pairing code** will appear in the terminal
+- Open WhatsApp on your phone
+- Go to **Settings > Linked Devices > Link a Device**
+- Tap **"Link with phone number instead"**
+- Enter the pairing code shown in the terminal
+- Bot will connect automatically — no QR code needed!
 
 ## 📋 Command Categories
 
@@ -150,9 +161,13 @@ Edit `.env` file to customize:
 BOT_NAME=Unified Bot          # Bot name
 OWNER_NUMBER=1234567890       # Owner WhatsApp number
 PREFIX=.                      # Command prefix
+PHONE_NUMBER=212612345678     # Your WhatsApp number (international, no +)
 PUBLIC_MODE=true              # Public or private mode
 SESSION_DIR=./session         # Session storage location
 ```
+
+> **Note:** `PHONE_NUMBER` is used for the **Pairing Code** authentication method.
+> If not set in `.env`, the bot will prompt you to enter it in the terminal at startup.
 
 ## 🛠️ Adding New Commands
 
