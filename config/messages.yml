@@ -1,0 +1,23 @@
+# ─── Configuration des Messages de Réponses v3.0.0 ────────────────────────────
+
+# Réponses par défaut (facile à traduire)
+DEFAULT_ERROR: "❌ Une erreur s'est produite lors de l'exécution de cette commande."
+DEFAULT_SUCCESS: "✅ Commande exécutée avec succès !"
+DEFAULT_MUTE: "🤐 L'utilisateur a été rendu muet."
+DEFAULT_BAN: "🔨 L'utilisateur a été banni du serveur."
+DEFAULT_KICK: "👢 L'utilisateur a été expulsé du serveur."
+
+# Réponses de protection Anti-X
+ANTI_SPAM_MESSAGE: "⚠️ @user, les messages répétés ne sont pas autorisés ici !"
+ANTI_LINK_MESSAGE: "⚠️ @user, les liens publicitaires sont interdits dans ce salon !"
+ANTI_CAPS_MESSAGE: "⚠️ @user, merci de ne pas crier (trop de majuscules) !"
+ANTI_MENTION_MESSAGE: "⚠️ @user, merci de limiter les mentions dans vos messages !"
+ANTI_RAID_MESSAGE: "🛡️ Détection de raid ! Le serveur est passé en mode protection."
+ANTI_BOT_MESSAGE: "🤖 Détection de bot suspect ! Le compte a été mis en quarantaine."
+ANTI_DM_MESSAGE: "🚫 Le spam par message privé est interdit !"
+ANTI_GHOST_PING_MESSAGE: "👻 @user, merci de ne pas supprimer vos messages contenant des mentions !"
+ANTI_UNICODE_MESSAGE: "🚫 Les caractères invisibles ne sont pas autorisés !"
+
+# Messages de bienvenue et d'adieu
+WELCOME_MESSAGE: "👋 Bienvenue @user sur le serveur !"
+GOODBYE_MESSAGE: "😢 Au revoir @user, à bientôt !"

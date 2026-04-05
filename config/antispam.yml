@@ -1,0 +1,22 @@
+# ─── Configuration de l'Anti-Spam v3.0.0 ──────────────────────────────────────
+
+# Seuil de messages répétés (ex: 5 messages identiques)
+REPEATED_MESSAGES_THRESHOLD: 5
+
+# Seuil d'emojis par message (ex: max 10 emojis)
+MAX_EMOJIS_PER_MESSAGE: 10
+
+# Seuil de majuscules (ex: max 70% de majuscules)
+MAX_CAPS_PERCENTAGE: 0.7
+
+# Seuil de mentions (ex: max 5 mentions par message)
+MAX_MENTIONS_PER_MESSAGE: 5
+
+# Seuil de fichiers par seconde (ex: max 2 fichiers par seconde)
+MAX_FILES_PER_SECOND: 2
+
+# Temps de bannissement automatique (en secondes, ex: 3600 = 1 heure)
+AUTO_BAN_DURATION: 3600
+
+# Temps de mute automatique (en secondes, ex: 600 = 10 minutes)
+AUTO_MUTE_DURATION: 600

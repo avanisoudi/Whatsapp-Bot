@@ -1,0 +1,6 @@
+discord.py
+python-dotenv
+pyyaml
+sqlite3
+asyncio
+logging
