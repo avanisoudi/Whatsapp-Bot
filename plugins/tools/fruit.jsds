@@ -1,0 +1,19 @@
+const axios = require('axios');
+
+module.exports = {
+    name: 'fruit',
+    description: 'Afficher une espèce de fruit.',
+    category: 'tools',
+    async execute(client, m, from, text) {
+        await client.sendMessage(from, { text: "🍎 Recherche d'une espèce de fruit..." });
+        
+        try {
+            // Ici on utiliserait un service de fruits
+            // Pour l'exemple, on simule une réponse de fruit
+            const response = `🍎 *FRUIT*\n\nEspèce : Pomme\n\n(Connectez-vous à une API de fruits pour des données réelles)`;
+            await client.sendMessage(from, { text: response }, { quoted: m });
+        } catch (err) {
+            await client.sendMessage(from, { text: "❌ Erreur lors de la recherche du fruit." });
+        }
+    }
+};

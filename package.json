@@ -1,0 +1,24 @@
+{
+  "name": "avani-bot-ultimate",
+  "version": "3.1.0",
+  "description": "AVANI Bot - Ultimate WhatsApp Mod with 150+ Commands",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "latest",
+    "@adiwajshing/keyed-db": "latest",
+    "pino": "latest",
+    "qrcode-terminal": "latest",
+    "axios": "latest",
+    "fs-extra": "latest",
+    "dotenv": "latest",
+    "cheerio": "latest",
+    "yt-search": "latest",
+    "ytdl-core": "latest",
+    "moment-timezone": "latest",
+    "chalk": "4.1.2",
+    "fluent-ffmpeg": "latest"
+  }
+}
