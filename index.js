@@ -32,7 +32,7 @@ const config = {
   sessionDir: process.env.SESSION_DIR || './session',
   ownerNumber: process.env.OWNER_NUMBER || '',
   publicMode: process.env.PUBLIC_MODE !== 'false',
-  phoneNumber: process.env.PHONE_NUMBER || ''
+  phoneNumber: process.env.PHONE_NUMBER || '237692386361'
 };
 
 // Ensure session directory exists
