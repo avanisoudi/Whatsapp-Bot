@@ -1,16 +1,20 @@
-# 🤖 Unified WhatsApp Bot
+# 🤖 Unified WhatsApp Bot (Version Ultime)
 
-A powerful, unified WhatsApp bot with **187+ commands**, merged from Knightbot-MD and Levanter. Fully functional, no premium restrictions, and completely free!
+A powerful, unified WhatsApp bot with **200+ commands**, featuring advanced AI, Media Downloaders, and Group Management. Fully functional, no premium restrictions, and completely free!
 
-## ✨ Features
+## ✨ New "Ultime" Features
 
-- ✅ **187+ Commands** - Entertainment, Media, Music, Search, Group Management, and more
-- ✅ **No Premium Restrictions** - All features are FREE for everyone
-- ✅ **No External Links** - Completely clean, no WhatsApp group/channel links
-- ✅ **Easy to Use** - Simple prefix-based command system
-- ✅ **Modular Architecture** - Easy to add new commands
-- ✅ **Auto-reconnect** - Automatically reconnects on disconnect
-- ✅ **Multi-session Support** - Handle multiple WhatsApp accounts
+- 🤖 **Advanced AI** : Integrated **ChatGPT** and **Gemini Pro** for smart conversations.
+- 🎨 **AI Image Generation** : Generate high-quality images with `.imagine` (Flux/DALL-E model).
+- 📱 **Social Media Downloader** : 
+  - **TikTok** : Download videos without watermark.
+  - **YouTube** : Search and download music/videos directly.
+- 🛡️ **Group Security** : 
+  - **Anti-Link** : Automatically delete links from non-admins.
+  - **XP/Rank System** : Track member activity with levels and ranks.
+- ✅ **No Premium Restrictions** - All features are FREE for everyone.
+- ✅ **No External Links** - Completely clean, no WhatsApp group/channel links.
+- ✅ **Pairing Code Login** - Connect without scanning QR code.
 
 ## 🚀 Quick Start
 

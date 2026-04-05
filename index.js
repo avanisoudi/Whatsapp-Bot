@@ -12,6 +12,10 @@ import readline from 'readline';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
+// Importation des états globaux pour Anti-Link et XP
+import { antilinkState } from './commands/antilink.js';
+import { userXP } from './commands/rank.js';
+
 // Load environment variables
 dotenv.config();
 
@@ -28,7 +32,6 @@ const config = {
   sessionDir: process.env.SESSION_DIR || './session',
   ownerNumber: process.env.OWNER_NUMBER || '',
   publicMode: process.env.PUBLIC_MODE !== 'false',
-  // Numéro de téléphone pour le Pairing Code (format international sans +, ex: 212612345678)
   phoneNumber: process.env.PHONE_NUMBER || ''
 };
 
@@ -66,7 +69,7 @@ async function loadCommands() {
       const cmdName = file.replace('.js', '');
       if (command.default && typeof command.default === 'function') {
         commands.set(cmdName, command.default);
-        logger.info(`✅ Command loaded: ${cmdName}`);
+        // logger.info(`✅ Command loaded: ${cmdName}`);
       }
     } catch (error) {
       logger.error(`❌ Error loading command ${file}:`, error.message);
@@ -86,16 +89,13 @@ async function startBot() {
     const sock = makeWASocket({
       version,
       logger: pino({ level: 'silent' }),
-      // Désactiver le QR code dans le terminal
       printQRInTerminal: false,
       auth: state,
       browser: ['Ubuntu', 'Chrome', '121.0']
     });
 
     // ─── Connexion via Pairing Code ──────────────────────────────────────────
-    // Le Pairing Code n'est disponible que si la session n'est pas encore établie
     if (!sock.authState.creds.registered) {
-      // Récupérer le numéro de téléphone : priorité à .env, sinon demander dans le terminal
       let phoneNumber = config.phoneNumber;
 
       if (!phoneNumber) {
@@ -110,7 +110,6 @@ async function startBot() {
         phoneNumber = await question('📱 Votre numéro WhatsApp : ');
       }
 
-      // Nettoyer le numéro (supprimer espaces, tirets, +)
       phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
 
       if (!phoneNumber) {
@@ -118,7 +117,6 @@ async function startBot() {
         process.exit(1);
       }
 
-      // Demander le Pairing Code à Baileys
       try {
         const pairingCode = await sock.requestPairingCode(phoneNumber);
         logger.info('');
@@ -136,21 +134,17 @@ async function startBot() {
         logger.info('');
       } catch (err) {
         logger.error('❌ Impossible de générer le code de couplage :', err.message);
-        logger.error('   Vérifiez que votre numéro est correct et réessayez.');
         process.exit(1);
       }
     }
-    // ─────────────────────────────────────────────────────────────────────────
 
-    // Load commands
     await loadCommands();
 
-    // Handle connection events
     sock.ev.on('connection.update', (update) => {
       const { connection, lastDisconnect } = update;
 
       if (connection === 'open') {
-        logger.info('✅ Bot connecté avec succès via Pairing Code !');
+        logger.info('✅ Bot connecté avec succès !');
         logger.info(`🤖 Bot : ${config.botName} | Préfixe : ${config.prefix}`);
       }
 
@@ -167,14 +161,12 @@ async function startBot() {
       }
     });
 
-    // Save credentials
     sock.ev.on('creds.update', saveCreds);
 
     // Handle incoming messages
     sock.ev.on('messages.upsert', async (m) => {
       try {
         const message = m.messages[0];
-
         if (!message.message || message.key.fromMe) return;
 
         const chatId = message.key.remoteJid;
@@ -188,13 +180,39 @@ async function startBot() {
           message.message?.imageMessage?.caption ||
           message.message?.videoMessage?.caption ||
           ''
-        ).toLowerCase().trim();
+        ).trim();
 
-        if (!text.startsWith(config.prefix)) return;
+        const lowerText = text.toLowerCase();
+
+        // 🛡️ SYSTÈME ANTI-LINK (uniquement dans les groupes actifs)
+        if (isGroup && antilinkState.has(chatId) && (lowerText.includes('http://') || lowerText.includes('https://'))) {
+          try {
+            const groupMetadata = await sock.groupMetadata(chatId);
+            const participant = groupMetadata.participants.find(p => p.id === senderId);
+            const isAdmin = participant && (participant.admin === 'admin' || participant.admin === 'superadmin');
+
+            if (!isAdmin) {
+              logger.info(`🛡️ Anti-Link : Suppression d'un lien de ${senderId}`);
+              await sock.sendMessage(chatId, { delete: message.key });
+              await sock.sendMessage(chatId, { text: `⚠️ @${senderId.split('@')[0]}, les liens ne sont pas autorisés dans ce groupe !`, mentions: [senderId] });
+              return;
+            }
+          } catch (e) {
+            logger.error('Erreur Anti-Link check:', e.message);
+          }
+        }
+
+        // 📈 SYSTÈME D'XP / RANK
+        if (isGroup) {
+          const currentXP = userXP.get(senderId) || 0;
+          userXP.set(senderId, currentXP + 1); // +1 XP par message
+        }
+
+        if (!lowerText.startsWith(config.prefix)) return;
 
         // Parse command and arguments
         const args = text.slice(config.prefix.length).trim().split(/\s+/);
-        const commandName = args[0];
+        const commandName = args[0].toLowerCase();
         const commandArgs = args.slice(1);
 
         logger.info(`📨 Commande : ${commandName} | De : ${senderId} | Groupe : ${isGroup}`);
@@ -206,20 +224,13 @@ async function startBot() {
             await command(sock, chatId, message, commandArgs, config);
           } catch (error) {
             logger.error(`Erreur lors de l'exécution de ${commandName} :`, error.message);
-            await sock.sendMessage(
-              chatId,
-              { text: `❌ Erreur : ${error.message}` },
-              { quoted: message }
-            );
+            await sock.sendMessage(chatId, { text: `❌ Erreur : ${error.message}` }, { quoted: message });
           }
         } else {
-          await sock.sendMessage(
-            chatId,
-            {
-              text: `❌ Commande introuvable : ${commandName}\n\nUtilisez ${config.prefix}help pour voir toutes les commandes disponibles.`
-            },
-            { quoted: message }
-          );
+          // Commande non trouvée
+          await sock.sendMessage(chatId, { 
+            text: `❌ Commande introuvable : ${commandName}\n\nUtilisez ${config.prefix}help pour voir toutes les commandes disponibles.` 
+          }, { quoted: message });
         }
       } catch (error) {
         logger.error('Erreur lors du traitement du message :', error);
