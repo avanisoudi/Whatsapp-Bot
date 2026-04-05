@@ -17,20 +17,30 @@ const phoneNumber = "237692386361";
 const botName = "AVANI Bot";
 const prefix = ".";
 
-const store = makeInMemoryStore({ logger: pino().child({ level: 'silent', stream: 'store' }) });
+// Correction du store (pour éviter l'erreur de type function)
+const store = makeInMemoryStore ? makeInMemoryStore({ logger: pino().child({ level: 'silent', stream: 'store' }) }) : null;
 
-// Chargeur de plugins
+// Chargeur de plugins simplifié
 const plugins = new Map();
 function loadPlugins() {
-    const pluginFolders = fs.readdirSync(path.join(__dirname, 'plugins'));
-    for (const folder of pluginFolders) {
-        const pluginFiles = fs.readdirSync(path.join(__dirname, 'plugins', folder)).filter(file => file.endsWith('.js'));
-        for (const file of pluginFiles) {
-            const plugin = require(path.join(__dirname, 'plugins', folder, file));
-            plugins.set(plugin.name, plugin);
+    const pluginDir = path.join(__dirname, 'plugins');
+    if (!fs.existsSync(pluginDir)) fs.mkdirSync(pluginDir);
+    
+    const folders = fs.readdirSync(pluginDir);
+    for (const folder of folders) {
+        const folderPath = path.join(pluginDir, folder);
+        if (fs.lstatSync(folderPath).isDirectory()) {
+            const files = fs.readdirSync(folderPath).filter(file => file.endsWith('.js'));
+            for (const file of files) {
+                try {
+                    const plugin = require(path.join(folderPath, file));
+                    if (plugin.name) plugins.set(plugin.name, plugin);
+                } catch (e) {
+                    console.log(chalk.red(`Erreur chargement ${file}: ${e.message}`));
+                }
+            }
         }
     }
-    console.log(chalk.green(`✅ ${plugins.size} commandes chargées.`));
 }
 
 async function startBot() {
@@ -45,16 +55,24 @@ async function startBot() {
         browser: ["Ubuntu", "Chrome", "20.0.04"],
     });
 
+    // Sauvegarde automatique des identifiants
+    client.ev.on('creds.update', saveCreds);
+
+    // Demande de Pairing Code automatique
     if (!client.authState.creds.registered) {
-        console.log(chalk.cyan.bold(`\n🛡️  ${botName.toUpperCase()} - CONNEXION\n`));
+        console.log(chalk.cyan.bold(`\n🛡️  ${botName.toUpperCase()} - CONNEXION EN COURS...\n`));
         setTimeout(async () => {
-            let code = await client.requestPairingCode(phoneNumber);
-            code = code?.match(/.{1,4}/g)?.join("-") || code;
-            console.log(chalk.white.bgCyan.bold(` VOTRE CODE : ${code} `));
+            try {
+                let code = await client.requestPairingCode(phoneNumber);
+                code = code?.match(/.{1,4}/g)?.join("-") || code;
+                console.log(chalk.white.bgCyan.bold(`\n VOTRE CODE DE COUPLAGE : ${code} \n`));
+                console.log(chalk.gray(`Entrez ce code sur votre WhatsApp (Appareils connectés > Connecter par code)\n`));
+            } catch (err) {
+                console.log(chalk.red("Erreur génération code: " + err.message));
+            }
         }, 3000);
     }
 
-    client.ev.on('creds.update', saveCreds);
     loadPlugins();
 
     client.ev.on('messages.upsert', async (chatUpdate) => {
@@ -74,13 +92,9 @@ async function startBot() {
 
             const plugin = plugins.get(commandName);
             if (plugin) {
-                // Simulation de permissions simples
-                m.isGroup = from.endsWith('@g.us');
-                m.sender = m.key.participant || m.key.remoteJid;
-                // Exécution du plugin
                 await plugin.execute(client, m, from, text);
             } else if (commandName === 'menu' || commandName === 'help') {
-                let menuText = `✨ *${botName.toUpperCase()} - VERSION ILLIMITÉE* ✨\n\n`;
+                let menuText = `✨ *${botName.toUpperCase()} - ILLIMITÉ* ✨\n\n`;
                 const categories = {};
                 plugins.forEach(p => {
                     if (!categories[p.category]) categories[p.category] = [];
@@ -90,19 +104,25 @@ async function startBot() {
                 for (const cat in categories) {
                     menuText += `*${cat.toUpperCase()}* : ${categories[cat].map(n => '.' + n).join(', ')}\n\n`;
                 }
-                menuText += `\n🚀 *Plus de 150 commandes disponibles !*`;
+                menuText += `🚀 *Plus de 150 commandes prêtes !*`;
                 await client.sendMessage(from, { text: menuText }, { quoted: m });
             }
         } catch (err) {
-            console.error(err);
+            console.error("Erreur message:", err);
         }
     });
 
     client.ev.on('connection.update', (update) => {
-        const { connection } = update;
-        if (connection === 'open') console.log(chalk.green(`\n✅ ${botName} est prêt sur Katabump !`));
-        if (connection === 'close') startBot();
+        const { connection, lastDisconnect } = update;
+        if (connection === 'open') {
+            console.log(chalk.green.bold(`\n✅ ${botName} est EN LIGNE !`));
+        }
+        if (connection === 'close') {
+            const reason = new Boom(lastDisconnect?.error)?.output.statusCode;
+            if (reason !== DisconnectReason.loggedOut) startBot();
+            else console.log(chalk.red("Déconnecté. Supprimez le dossier 'session' pour relancer."));
+        }
     });
 }
 
-startBot();
+startBot().catch(err => console.log(chalk.red("Crash critique: " + err.message)));
